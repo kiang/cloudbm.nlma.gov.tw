@@ -22,6 +22,14 @@ for ($year; $year <= $currentYear; $year++) {
                 $encodedLicenseType = urlencode($licenseType);
                 $encodedDate = urlencode("{$year}年{$monthStr}月");
                 $url = "http://210.69.40.24/opendata/OpenDataSearchUrl.do?d=OPENDATA&c=BUILDLIC&Start={$start}&執照類別={$encodedLicenseType}&發照日期={$encodedDate}";
+                $fileName = $rawDir . "/{$licenseType}_{$page}.json";
+                // Skip if file exists and not in the most recent 3 months
+                $isRecent = ((int)$year == (int)$currentYear && (int)$month >= (int)$currentMonth - 2);
+                if (file_exists($fileName) && !$isRecent) {
+                    echo "Skipping existing file: {$fileName}\n";
+                    $page++;
+                    continue;
+                }
                 // Use cURL to fetch the remote file with browser headers
                 $ch = curl_init();
                 curl_setopt($ch, CURLOPT_URL, $url);
@@ -40,7 +48,6 @@ for ($year; $year <= $currentYear; $year++) {
                 if ($json === false || trim($json) === '' || $json === '{}') {
                     break;
                 }
-                $fileName = $rawDir . "/{$licenseType}_{$page}.json";
                 file_put_contents($fileName, $json);
                 echo "Saved: {$fileName}\n";
                 // Check if there is more data (pagination)
