@@ -27,6 +27,12 @@ for ($year; $year <= $currentYear; $year++) {
                 $isRecent = ((int)$year == (int)$currentYear && (int)$month >= (int)$currentMonth - 2);
                 if (file_exists($fileName) && !$isRecent) {
                     echo "Skipping existing file: {$fileName}\n";
+                    // Check if there is more data (pagination) even when skipping
+                    $json = file_get_contents($fileName);
+                    $data = json_decode($json, true);
+                    if (empty($data) || count($data['data']) < 100) { // 100 per page
+                        break;
+                    }
                     $page++;
                     continue;
                 }
